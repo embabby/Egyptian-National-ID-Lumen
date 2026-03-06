@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Egyptian National ID Validator API — README</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --heading: #58a6ff;
+      --link: #58a6ff;
+      --code-bg: #21262d;
+      --code-border: #30363d;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 { font-size: 2rem; color: var(--heading); border-bottom: 1px solid var(--border); padding-bottom: 0.3em; margin-top: 0; }
+    h2 { font-size: 1.5rem; color: var(--heading); border-bottom: 1px solid var(--border); padding-bottom: 0.3em; margin-top: 2rem; }
+    h3 { font-size: 1.25rem; color: var(--heading); margin-top: 1.5rem; }
+    p { margin: 0.75em 0; }
+    ul, ol { margin: 0.75em 0; padding-left: 2em; }
+    li { margin: 0.25em 0; }
+    strong { font-weight: 600; color: #fff; }
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 6px;
+      padding: 0.2em 0.4em;
+      font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace;
+      font-size: 0.9em;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    pre[data-lang="json"] .key { color: #79c0ff; }
+    pre[data-lang="json"] .str { color: #a5d6ff; }
+    pre[data-lang="json"] .num { color: #79c0ff; }
+    pre[data-lang="json"] .bool { color: #ff7b72; }
+    pre[data-lang="json"] .null { color: var(--text-muted); }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .subtitle { color: var(--text-muted); font-size: 1.05rem; margin-top: -0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Egyptian National ID Validator API</h1>
+  <p class="subtitle">A Lumen (Laravel) API that validates Egyptian national ID numbers and extracts encoded data (birth date, gender, governorate). It includes rate limiting, API key authentication, and optional call tracking for billing.</p>
+
+  <h2>Requirements</h2>
+  <ul>
+    <li>PHP 8.1+</li>
+    <li>Composer</li>
+    <li>MySQL</li>
+  </ul>
+
+  <h2>Installation</h2>
+  <pre><code>composer install
+cp .env.example .env</code></pre>
+
+  <h3>Database (MySQL)</h3>
+  <p>Create a MySQL database, then set in <code>.env</code>:</p>
+  <pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database
+DB_USERNAME=your_user
+DB_PASSWORD=your_password</code></pre>
+  <p>Run migrations:</p>
+  <pre><code>php artisan migrate</code></pre>
+
+  <h3>Create an API key</h3>
+  <p>Generate a new API key (store the output securely; the raw key is only shown once):</p>
+  <pre><code>php artisan api-key:generate --name="My Service"</code></pre>
+  <p>Or seed a development key:</p>
+  <pre><code>php artisan db:seed
+# Note the "Development API key" printed; add it to .env or use in requests.</code></pre>
+
+  <h2>Running the application</h2>
+  <pre><code>php -S localhost:8000 -t public</code></pre>
+  <p>The API will be available at <code>http://localhost:8000</code>.</p>
+
+  <h2>API</h2>
+
+  <h3>Health check (no authentication)</h3>
+  <ul>
+    <li><strong>GET</strong> <code>/api/v1/health</code><br>Returns <code>{"status":"ok","service":"egyptian-id-api"}</code>.</li>
+  </ul>
+
+  <h3>Validate &amp; extract national ID</h3>
+  <ul>
+    <li><strong>POST</strong> or <strong>GET</strong> <code>/api/v1/national-id/validate</code></li>
+  </ul>
+  <p><strong>Authentication:</strong> Required. Send one of:</p>
+  <ul>
+    <li>Header: <code>X-API-Key: &lt;your-api-key&gt;</code></li>
+    <li>Header: <code>Authorization: Bearer &lt;your-api-key&gt;</code></li>
+  </ul>
+  <p><strong>Rate limit:</strong> 60 requests per minute per API key (configurable in route middleware).</p>
+  <p><strong>Request</strong></p>
+  <ul>
+    <li><strong>POST</strong> body (JSON): <code>{"national_id": "29001011234567"}</code></li>
+    <li><strong>GET</strong> query: <code>?national_id=29001011234567</code></li>
+  </ul>
+  <p>The national ID must be exactly 14 digits (spaces are stripped).</p>
+  <p><strong>Response (200)</strong></p>
+  <p>Valid ID:</p>
+  <pre data-lang="json"><code>{
+  "valid": true,
+  "national_id": "29506202110012",
+  "data": {
+    "birth_date": "1995-06-20",
+    "birth_year": 1995,
+    "birth_month": 6,
+    "birth_day": 20,
+    "gender": "male",
+    "governorate": {
+      "code": "21",
+      "name": "Giza"
+    }
+  }
+}</code></pre>
+  <p>Invalid ID:</p>
+  <pre data-lang="json"><code>{
+  "valid": false,
+  "national_id": "00000000000000",
+  "data": null
+}</code></pre>
+  <p><strong>Error responses</strong></p>
+  <ul>
+    <li><strong>401</strong> – Missing or invalid API key.</li>
+    <li><strong>422</strong> – Validation error (e.g. missing or invalid <code>national_id</code>).</li>
+    <li><strong>429</strong> – Too many requests (rate limit).</li>
+  </ul>
+
+  <h2>Egyptian national ID format</h2>
+  <p>The 14-digit ID is structured as:</p>
+  <ul>
+    <li><strong>Digit 1:</strong> Century (2 = 1900–1999, 3 = 2000–2099)</li>
+    <li><strong>Digits 2–7:</strong> Birth date (YYMMDD)</li>
+    <li><strong>Digits 8–9:</strong> Governorate code (official Civil Registry codes)</li>
+    <li><strong>Digit 10:</strong> Gender (odd = male, even = female)</li>
+    <li><strong>Digits 11–13:</strong> Serial number</li>
+    <li><strong>Digit 14:</strong> Luhn check digit</li>
+  </ul>
+  <p>Validation checks length, numeric format, Luhn check digit, and plausibility of date and governorate code.</p>
+
+  <h2>Design and implementation notes</h2>
+  <ol>
+    <li><strong>Framework:</strong> Lumen was chosen for a minimal, fast API with Laravel's routing, validation, and database stack.</li>
+    <li><strong>Validation &amp; extraction:</strong> Logic lives in <code>App\Services\EgyptianNationalIdService</code>: Luhn check digit, century/date/governorate rules, and governorate list from official sources (e.g. Egyptian Civil Registry / Wikipedia).</li>
+    <li><strong>Authentication:</strong> API keys are stored as SHA-256 hashes in <code>api_keys</code>; the raw key is never stored. Keys can be sent via <code>X-API-Key</code> or <code>Authorization: Bearer</code>.</li>
+    <li><strong>Rate limiting:</strong> Per–API-key limit (e.g. 60/minute) is enforced in middleware using the cache; limit and window are set on the route (<code>rate.limit:60,1</code>).</li>
+    <li><strong>Call tracking (bonus):</strong> Each request to the national-id endpoint is recorded in <code>api_calls</code> (api_key_id, endpoint, method, national_id requested, response status, IP, user agent). This supports usage tracking and future billing logic; no charge calculation is implemented.</li>
+    <li><strong>Database:</strong> MySQL. Migrations create <code>api_keys</code> and <code>api_calls</code> (and migrations table).</li>
+  </ol>
+
+  <h2>Testing</h2>
+  <pre><code>composer test
+# or
+./vendor/bin/phpunit</code></pre>
+  <ul>
+    <li><strong>Unit tests:</strong> <code>EgyptianNationalIdService</code> (validation, extraction, normalization).</li>
+    <li><strong>Feature tests:</strong> Health, auth required, validation errors, valid ID response, Bearer token.</li>
+  </ul>
+  <p>Tests use MySQL. Create a test database (e.g. <code>egyptian_id_test</code>) and set <code>DB_*</code> in <code>.env.testing</code> or phpunit.xml; migrations run automatically for feature tests.</p>
+
+  <h2>Project structure (relevant parts)</h2>
+  <pre><code>app/
+  Console/Commands/GenerateApiKeyCommand.php   # api-key:generate
+  Http/
+    Controllers/NationalIdController.php      # validate endpoint
+    Middleware/
+      ApiKeyAuthMiddleware.php
+      RateLimitMiddleware.php
+      TrackApiCallMiddleware.php
+  Models/ApiKey.php, ApiCall.php
+  Services/EgyptianNationalIdService.php
+config/database.php, cache.php
+database/migrations/   # api_keys, api_calls
+routes/web.php</code></pre>
+
+  <h2>License</h2>
+  <p>MIT.</p>
+</body>
+</html>
