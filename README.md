@@ -172,32 +172,3 @@ config/database.php, cache.php
 database/migrations/   # api_keys, api_calls
 routes/web.php
 ```
-
-## Submitting / GitHub
-
-This project is a Git repository. To host it on GitHub:
-
-1. **Create a new repository on GitHub**  
-   Go to [github.com/new](https://github.com/new), choose a name (e.g. `egyptian-id-api-lumen`), leave it empty (no README, no .gitignore).
-
-2. **Push this code** (replace `YOUR_USERNAME` and `YOUR_REPO` with your GitHub username and repo name):
-
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-   If you use SSH:
-
-   ```bash
-   git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-3. **Optional:** Add a description and topics on the GitHub repo page so others can find it.
-
-## License
-
-MIT.
